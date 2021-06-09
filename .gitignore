@@ -1,3 +1,16 @@
+# Custom
+*.log
+*.log.*
+*_backup.*
+*_old.*
+.DS_Store
+*.ini
+~*.docx
+mongo-volume
+postgres-volume
+oracle-volume
+dump
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
