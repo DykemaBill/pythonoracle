@@ -1,0 +1,23 @@
+# See the following for setup help:
+#   https://github.com/oracle/docker-images/issues/200
+#   https://hub.docker.com/_/oracle-database-enterprise-edition
+# Using oracledev as user/password credentials for development only
+version: '2'
+
+services:
+
+# Oracle database server
+  mongodb_datahome:
+    image: oracle-database-enterprise-edition
+    container_name: oracle
+    ports:
+      - 1521:1521
+      - 8080:8080
+      - 5500:5500
+    environment:
+      ORACLE_SID: oracledev
+      ORACLE_PDB: oracledev
+      volumes:
+        - ./oracle-volume:/opt/oracle/oradata # Oracle database
+    
+    
