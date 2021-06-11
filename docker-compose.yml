@@ -1,23 +1,41 @@
-# See the following for setup help:
-#   https://github.com/oracle/docker-images/issues/200
-#   https://hub.docker.com/_/oracle-database-enterprise-edition
+# Directions
+#   You must first register to be able to use this Docker image from the Docker Hub website:
+#     https://hub.docker.com/_/oracle-database-enterprise-edition
+#   Pull and startup the container:
+#     cd [folder with docker-compose.yml in it]; docker compose up -d
+#   Attach to the container:
+#     docker exec -it oracle bash -c "source /home/oracle/.bashrc; sqlplus /nolog"
+#   Once at the SQL prompt:
+#     connect oracledev as sysdba;
+#   Validate SID for Oracle service:
+#     select value from v$parameter where name='service_names';
+#   List databases:
+#     SELECT username AS schema_name
+#     FROM dba_users
+#     ORDER BY username;
+#   Create and remove a test table:
+#     CREATE TABLE testtable
+#       (
+#         test_text VARCHAR2(50)
+#       );
+#     SELECT * FROM testtable;
+#     DROP TABLE testtable;
 # Using oracledev as user/password credentials for development only
 version: '2'
 
 services:
 
 # Oracle database server
-  mongodb_datahome:
-    image: oracle-database-enterprise-edition
+  oracle_server:
+    image: store/oracle/database-enterprise:12.2.0.1-slim
     container_name: oracle
     ports:
-      - 1521:1521
-      - 8080:8080
-      - 5500:5500
+      - 1521:1521 # Connect via sqlplus sys/<your password>@//localhost:1521/<your SID> as sysdba
+      - 5500:5500 # Manage from https://localhost:5500/em
     environment:
-      ORACLE_SID: oracledev
-      ORACLE_PDB: oracledev
-      volumes:
-        - ./oracle-volume:/opt/oracle/oradata # Oracle database
-    
-    
+      ORACLE_SID: oracledev # Sytem Identifier (default: ORCLCDB)
+      ORACLE_PDB: oracledev # Plugable database name (default: ORCLPDB1)
+      ORACLE_PWD: oracledev # SYS, SYSTEM and PDB_ADMIN password
+      ORACLE_CHARACTERSET: AL32UTF8 # Unicode character set
+    volumes:
+      - ./oracle-volume:/opt/oracle/oradata
