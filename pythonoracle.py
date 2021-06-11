@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine # Library to talk with Oracle
+from sqlalchemy import create_engine # Library to talk with Oracle, requires Python cx_oracle module and the Oracle Instant Client to be installed
 import logging, logging.handlers, json, sys
 from datetime import datetime
 import encryptpass as encryptpass
@@ -63,21 +63,21 @@ def config_file_read(config_file_name):
             support_email = cfg_data['email']
 
             # Read DB type
-            db_conn_type = cfg_data['db_target_type']
-            # Read target DB account
-            db_conn_acct = cfg_data['db_target_acct']
-            # Read target DB encrypted password
-            db_conn_pass_encrypted = cfg_data['db_target_pass']
-            # Decrypt target DB byte to plain text password
+            db_conn_type = cfg_data['db_conn_type']
+            # Read DB account
+            db_conn_acct = cfg_data['db_conn_acct']
+            # Read DB encrypted password
+            db_conn_pass_encrypted = cfg_data['db_conn_pass']
+            # Decrypt DB byte to plain text password
             db_conn_pass = encryptpass.passdecrypt(decryption_key, db_conn_pass_encrypted)
-            # Read target DB host name
-            db_conn_host = cfg_data['db_target_host']
-            # Read target DB name
-            db_conn_database = cfg_data['db_target_database']
-            # Assemble target string
-            db_connection = db_conn_type + "://" + db_conn_acct + ":" + db_conn_pass + "@" + db_conn_host + "/" + db_conn_database
-            # Log target  string
-            db_connection_log = db_conn_type + "://" + db_conn_acct + ":" + "********" + "@" + db_conn_host + "/" + db_conn_database
+            # Read DB host name
+            db_conn_host = cfg_data['db_conn_host']
+            # Read DB name
+            db_conn_service = cfg_data['db_conn_service']
+            # Assemble string
+            db_connection = db_conn_type + "://" + db_conn_acct + ":" + db_conn_pass + "@" + db_conn_host + "/" + db_conn_service
+            # Log string
+            db_connection_log = db_conn_type + "://" + db_conn_acct + ":" + "********" + "@" + db_conn_host + "/" + db_conn_service
 
     except IOError:
         print('Problem opening ' + config_file + ', check to make sure your configuration file is not missing.')
@@ -110,8 +110,8 @@ def log_file_setup(log_file_name):
 
 # Database connection
 def setup_database(db_connection_path):
-    # Oracle object, db_target_type of postgres for local host
     if config_error == False:
+        print ("Connecting to database: " + str(db_connection_log))
         db_inst_setup = create_engine(db_connection_path)
     else:
         print('Database not connected because of problem opening ' + config_file + '.')
@@ -127,7 +127,7 @@ def test_database(db_inst, db_numfield, db_textfield):
         print ("Current hour is: " + str(nowHour))
         # Delete table just for testing purposes
         db_inst.execute("DROP TABLE IF EXISTS testtable")
-        # Create target relational table if it does not exist already
+        # Create relational table if it does not exist already
         db_inst.execute("CREATE TABLE IF NOT EXISTS testtable (test_datetime timestamptz, test_number bigint, test_text text)")  
         # Current date/time
         nowIs = datetime.now().strftime("%Y-%m-%d %H:%M:%S-00")
@@ -143,6 +143,8 @@ def test_database(db_inst, db_numfield, db_textfield):
 # Get command line arguments
 if __name__ == "__main__":
     if len(sys.argv) == 3:
+        numfield = sys.argv[1]
+        textfield = sys.argv[2]
         # Read configuration file
         print ("Reading configuration file: " + str(config_file))
         config_file_read(config_file)
@@ -151,10 +153,12 @@ if __name__ == "__main__":
         log_file_setup(log_file)
         # Database connection
         print ("Connecting to database: " + str(db_connection_log))
-        db_inst = setup_database(db_connection, sys.argv[1], sys.argv[2])
+        logger.info('Connecting to database: ' + str(db_connection_log))
+        db_inst = setup_database(db_connection)
         # Database test
         print ("Reading from database...")
-        test_database(db_inst)
+        logger.info('Writing/Reading from database with number "' + str(numfield) + '" and text of "' + str(textfield) + '"')
+        test_database(db_inst, numfield, textfield)
     else:
         print ("Syntax:")
         print ("        " + sys.argv[0] + " [int for 1st field] [text for 2nd field]")
