@@ -1,7 +1,10 @@
 # Directions
 #   You must first register to be able to use this Docker image from the Docker Hub website:
 #     https://hub.docker.com/_/oracle-database-enterprise-edition
-#   Pull and startup the container:
+#   Pull the image:
+#     docker login
+#     docker pull store/oracle/database-enterprise:12.2.0.1-slim
+#   Start the container:
 #     cd [folder with docker-compose.yml in it]; docker compose up -d
 #   Attach to the container:
 #     docker exec -it oracle bash -c "source /home/oracle/.bashrc; sqlplus /nolog"
