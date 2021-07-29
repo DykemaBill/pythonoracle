@@ -1,3 +1,20 @@
+# Macos Oracle driver
+#   download ODBC: http://www.unixodbc.org/download.html 
+#   install: https://blogs.oracle.com/opal/installing-the-oracle-odbc-driver-on-macos
+#       gunzip unixODBC-2.3.9.tar.gz
+#       tar xvf unixODBC-2.3.9.tar
+#       cd unixODBC-2.3.9
+#       ./configure
+#       make
+#       sudo make install
+#   download Oracle 19.8 Basic Light Package for ODBC: http://www.oracle.com/technetwork/topics/intel-macsoft-096467.html
+#       Open instantclient-basiclite-macos.x64-19.8.0.0.0dbru.dmg download
+#       Copy all files to /Applications/Oracle
+#       sudo ln -s /Applications/Oracle/libclntsh.dylib.19.1 /Applications/Oracle/libclntshcore.dylib.19.1 /usr/local/lib
+#       sudo odbc_update_ini.sh /usr/local
+#       sudo chown $USER ~/.odbc.ini
+#       
+
 from sqlalchemy import create_engine # Library to talk with Oracle, requires Python cx_oracle module and the Oracle Instant Client to be installed
 from sqlalchemy import Column, DateTime, BigInteger, Text # Used to make Oracle easier to query
 from sqlalchemy.ext.declarative import declarative_base # Used to make Oracle easier to query
@@ -210,6 +227,6 @@ if __name__ == "__main__":
     else:
         print ("Syntax:")
         print ("        " + sys.argv[0] + " put [int for 1st field] '[text for 2nd field]'")
-        print ("          Run with the word put to add record using number and text")
+        print ("          Run with the word put to add record using number and text fields")
         print ("        " + sys.argv[0] + " get [int for filter]")
-        print ("          Run query filtering with supplied number")
+        print ("          Run query filtered by number")
