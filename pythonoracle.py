@@ -2,9 +2,9 @@ from sqlalchemy import create_engine # Library to talk with Oracle, requires Pyt
 from sqlalchemy import Column, DateTime, BigInteger, Text # Used to make Oracle easier to query
 from sqlalchemy.ext.declarative import declarative_base # Used to make Oracle easier to query
 from sqlalchemy.orm import sessionmaker # Used to make Oracle easier to query
-import logging, logging.handlers, json, sys
-from datetime import datetime
-import encryptpass as encryptpass
+import logging, logging.handlers, json, sys # Used for reading config and logging
+from datetime import datetime # Used for logging
+import encryptpass as encryptpass # Used for decrypting database password read from config
 
 # Configuration file name
 config_name = 'settings'
