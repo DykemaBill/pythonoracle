@@ -1,4 +1,7 @@
 from sqlalchemy import create_engine # Library to talk with Oracle, requires Python cx_oracle module and the Oracle Instant Client to be installed
+from sqlalchemy import Column, DateTime, BigInteger, Text # Used to make Oracle easier to query
+from sqlalchemy.ext.declarative import declarative_base # Used to make Oracle easier to query
+from sqlalchemy.orm import sessionmaker # Used to make Oracle easier to query
 import logging, logging.handlers, json, sys
 from datetime import datetime
 import encryptpass as encryptpass
@@ -30,6 +33,14 @@ db_conn_pass = "yourpassword"
 db_conn_pass_encrypted = "yourpasswordencrypted"
 db_conn_host = "yourdbhost"
 db_conn_database = "yourdatabase"
+
+# Database ORM setup
+db_base = declarative_base()
+class TestTable(db_base):  
+    __tablename__ = 'testtable'
+    test_datetime = Column(DateTime, primary_key=True)
+    test_number = Column(BigInteger)
+    test_text = Column(Text)
 
 # Read configuration file function
 config_error = False
@@ -112,10 +123,15 @@ def log_file_setup(log_file_name):
 def setup_database(db_connection_path):
     if config_error == False:
         print ("Connecting to database: " + str(db_connection_log))
+        # Database connection
         db_inst_setup = create_engine(db_connection_path)
+        # Database wrap connection with ORM class
+        DB_Session = sessionmaker(db_inst_setup)  
+        db_session_path = DB_Session()
+        db_base.metadata.create_all(db_inst_setup)
     else:
         print('Database not connected because of problem opening ' + config_file + '.')
-    return db_inst_setup
+    return db_inst_setup, db_session_path
 
 # Database test
 def test_database(db_inst, db_numfield, db_textfield):
@@ -135,30 +151,65 @@ def test_database(db_inst, db_numfield, db_textfield):
         db_inst.execute("INSERT INTO testtable (test_datetime, test_number, test_text) VALUES ('" + nowIs + "', " + str(db_numfield) + ", '" + str(db_textfield) + "')")
         print ("Reading table back...")
         records_list = db_inst.execute("SELECT * FROM testtable") 
+        print ("Records after adding:")
         for record in records_list:
            print (str(record))
     else:
         print ("Error reading configuration")
 
+# Database query test with ORM (Object Relational Mapper)
+def test_orm(db_session, db_numfield_filter):
+    global config_error
+    record_count = 0
+    records_list = []
+    if config_error == False:
+        # Query
+        query_run = "and_(TestTable.test_number" + " == " + db_numfield_filter + ")"
+        # Record count
+        record_count = db_session.query(TestTable).filter(eval(query_run)).count()
+        # Get values
+        records_list = list(db_session.query(TestTable).filter(eval(query_run)))
+        print ("Record count: " + record_count)
+        print ("Records querying filtering for '" + db_numfield_filter + "':")
+        for record in records_list:
+           print (str(record))
+    else:
+        print ("Error reading configuration")
+
+# Read config, start logging and setup database connection
+def startup_here():
+    # Read configuration file
+    print ("Reading configuration file: " + str(config_file))
+    config_file_read(config_file)
+    # Log file setup
+    print ("Setting up log file: " + str(log_file))
+    log_file_setup(log_file)
+    # Database connection
+    print ("Connecting to database: " + str(db_connection_log))
+    logger.info('Connecting to database: ' + str(db_connection_log))
+    db_inst_setup, db_session_path = setup_database(db_connection)
+    return db_inst_setup, db_session_path
+
 # Get command line arguments
 if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        numfield = sys.argv[1]
-        textfield = sys.argv[2]
-        # Read configuration file
-        print ("Reading configuration file: " + str(config_file))
-        config_file_read(config_file)
-        # Log file setup
-        print ("Setting up log file: " + str(log_file))
-        log_file_setup(log_file)
-        # Database connection
-        print ("Connecting to database: " + str(db_connection_log))
-        logger.info('Connecting to database: ' + str(db_connection_log))
-        db_inst = setup_database(db_connection)
-        # Database test
-        print ("Reading from database...")
+    if len(sys.argv) == 4 and sys.argv[1] == "put":
+        numfield = sys.argv[2]
+        textfield = sys.argv[3]
+        db_inst, db_session = startup_here()
+        # Database write test
+        print ("Writing to database...")
         logger.info('Writing/Reading from database with number "' + str(numfield) + '" and text of "' + str(textfield) + '"')
         test_database(db_inst, numfield, textfield)
+    elif len(sys.argv) == 3 and sys.argv[1] == "get":
+        numfield_filter = sys.argv[2]
+        db_inst, db_session = startup_here()
+        # Database query test
+        print ("Reading from database...")
+        logger.info('Reading from database filtering for number "' + str(numfield_filter) + '"')
+        test_orm(db_session, numfield_filter)
     else:
         print ("Syntax:")
-        print ("        " + sys.argv[0] + " [int for 1st field] [text for 2nd field]")
+        print ("        " + sys.argv[0] + " put [int for 1st field] '[text for 2nd field]'")
+        print ("          Run with the word put to add record using number and text")
+        print ("        " + sys.argv[0] + " get [int for filter]")
+        print ("          Run query filtering with supplied number")
