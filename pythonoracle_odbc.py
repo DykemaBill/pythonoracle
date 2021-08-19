@@ -15,11 +15,12 @@
 #       sudo chown $USER ~/.odbc.ini
 #       
 
-from sqlalchemy import create_engine # Library to talk with Oracle, requires Python cx_oracle module and the Oracle Instant Client to be installed
-from sqlalchemy import Column, DateTime, BigInteger, Text # Used to make Oracle easier to query
-from sqlalchemy.ext.declarative import declarative_base # Used to make Oracle easier to query
-from sqlalchemy.orm import sessionmaker # Used to make Oracle easier to query
-#import pyodbc # Needed by SQLAlchemy
+from sqlalchemy import create_engine # Library to talk with Oracle, requires Python cx_Oracle module and the Oracle Instant Client to be installed on host
+from sqlalchemy import Column, DateTime, BigInteger, Text # Used to make Oracle easier to query with ORM
+from sqlalchemy.ext.declarative import declarative_base # Used to make Oracle easier to query with ORM
+from sqlalchemy.orm import sessionmaker # Used to make Oracle easier to query with ORM
+#import pyodbc # Not needed with SQLAlchemy
+#import cx_Oracle # Needed for connection string, but not used directly in code here unless you connect using cx_Oracle.connect rather than with the SQLAlchemy create_engine option
 import logging, logging.handlers, json, sys, os # Used for reading config and logging
 from datetime import datetime # Used for logging
 #import encryptpass as encryptpass # Used for decrypting database password read from config
@@ -86,8 +87,12 @@ def config_file_read(config_file_name):
             # Assemble string
             db_connection = db_conn_type + "://" + db_conn_service
             # Cannot get the above to work with an already defined ODBC DSN
-            # The following that uses a TNS configuration works
-            # db_connection = 'oracle+cx_oracle://sys:[pass]@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=[server name])(PORT=1521))(CONNECT_DATA=(SID=ORCLCDB)))'
+            # The following that uses a TNS syntax configuration works if you include credentials
+            # db_connection = 'oracle+cx_oracle://[account]:[pass]@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=[server name])(PORT=1521))(CONNECT_DATA=(SID=ORCLCDB)))'
+            # Or by referring to the TNS configuration by name provide it is available on the server
+            # db_connection = 'oracle+cx_oracle://[account]:[pass]@DTORACLE_TNS'
+            # Or read it from an environmental variable
+            # db_connection = os.environ.get("PYTHON_CONN")
 
     except IOError:
         print('Problem opening ' + config_file + ', check to make sure your configuration file is not missing.')

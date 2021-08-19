@@ -1,3 +1,2 @@
 sqlalchemy
-pyodbc
 cx_Oracle
