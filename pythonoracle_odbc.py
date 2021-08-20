@@ -95,6 +95,7 @@ logfilesize = [ 10000, 9 ] # 10000 is 10k, 9 is 10 total copies
 
 # Database configuration variables
 db_connection = "willbesetusingfourpartsbelow"
+db_connection_log = "willbesetusingfourpartsbelowhidingthepassword"
 db_conn_type = "dbtype"
 db_conn_acct = "youraccount"
 db_conn_pass = "yourpassword"
@@ -120,6 +121,7 @@ def config_file_read(config_file_name):
             global support_email
 
             global db_connection
+            global db_connection_log
             global db_conn_type
             global db_conn_acct
             global db_conn_pass_encrypted
@@ -154,6 +156,8 @@ def config_file_read(config_file_name):
             #   db_connection = 'oracle+cx_oracle://[account]:[pass]@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=[server name])(PORT=1521))(CONNECT_DATA=(SID=ORCLCDB)))'
             # Optionally you could provide the connection string from the host as a variable
             #   db_connection = os.environ.get("PYTHON_CONN")
+            # Connection string for logging and display
+            db_connection_log = db_conn_type + "://" + db_conn_acct + ":" + "**********" + "@" + db_conn_service
 
     except IOError:
         print('Problem opening ' + config_file + ', check to make sure your configuration file is not missing.')
@@ -187,7 +191,6 @@ def log_file_setup(log_file_name):
 # Database connection
 def setup_database(db_connection_path):
     if config_error == False:
-        print ("Connecting to database: " + str(db_connection))
         # Database connection
         db_inst_setup = create_engine(db_connection_path)
         # Database wrap connection with ORM class
@@ -203,9 +206,6 @@ def test_database(db_inst, db_numfield, db_textfield):
     global config_error
     records_list = []
     if config_error == False:
-        # Current hour
-        nowHour = int(datetime.now().strftime("%H"))
-        print ("Current hour is: " + str(nowHour))
         # Delete table just for testing purposes
         db_inst.execute("DROP TABLE IF EXISTS testtable")
         # Create relational table if it does not exist already
@@ -250,8 +250,8 @@ def startup_here():
     print ("Setting up log file: " + str(log_file))
     log_file_setup(log_file)
     # Database connection
-    print ("Connecting to database: " + str(db_connection))
-    logger.info('Connecting to database: ' + str(db_connection))
+    print ("Connecting to database: " + str(db_connection_log))
+    logger.info('Connecting to database: ' + str(db_connection_log))
     db_inst_setup, db_session_path = setup_database(db_connection)
     return db_inst_setup, db_session_path
 
