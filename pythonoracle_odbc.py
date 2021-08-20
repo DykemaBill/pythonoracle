@@ -183,7 +183,7 @@ def log_file_setup(log_file_name):
         print ("Unable to set config variables")
         logger.info('Problem opening ' + config_file + ', check to make sure your configuration files are not missing.')
     else: # Config settings out to the log
-        print ("Configuration files read")
+        print ("Configuration file read: " + config_file)
         logger.info('Log file size is set to ' + str(logfilesize[0]) + ' bytes and ' + str(logfilesize[1]) + ' copies')
         logger.info('Email is set to: ' + support_email)
         logger.info('Team is set to: ' + support_team)
@@ -206,19 +206,20 @@ def test_database(db_inst, db_numfield, db_textfield):
     global config_error
     records_list = []
     if config_error == False:
-        # Delete table just for testing purposes
-        db_inst.execute("DROP TABLE IF EXISTS testtable")
-        # Create relational table if it does not exist already
-        db_inst.execute("CREATE TABLE IF NOT EXISTS testtable (test_datetime timestamptz, test_number bigint, test_text text)")  
+        # Delete table just for testing purposes (if desired)
+        #db_inst.execute("DROP TABLE testtable")
+        # Create relational table if it does not exist already (will throw an error if it does)
+        #db_inst.execute("CREATE TABLE testtable (test_datetime TIMESTAMP NOT NULL, test_number INT, test_text VARCHAR2(50))")
         # Current date/time
-        nowIs = datetime.now().strftime("%Y-%m-%d %H:%M:%S-00")
+        now_is = datetime.now().strftime("%Y-%m-%d %H:%M:%S-00")
         # Write to relational database
-        db_inst.execute("INSERT INTO testtable (test_datetime, test_number, test_text) VALUES ('" + nowIs + "', " + str(db_numfield) + ", '" + str(db_textfield) + "')")
+        db_inst.execute("INSERT INTO testtable (test_datetime, test_number, test_text) VALUES (TO_DATE('%s', 'YYYY/MM/DD HH24:MI:SS'), %s, '%s')" % (str(now_is), int(db_numfield), str(db_textfield)))
+        #db_inst.execute("INSERT INTO testtable (test_datetime, test_number, test_text) VALUES ('" + now_is + "', " + str(db_numfield) + ", '" + str(db_textfield) + "')")
         print ("Reading table back...")
-        records_list = db_inst.execute("SELECT * FROM testtable") 
+        records_list = list(db_inst.execute("SELECT * FROM testtable"))
         print ("Records after adding:")
-        for record in records_list:
-           print (str(record))
+        for record in records_list: # record is a string
+            print (str(record))
     else:
         print ("Error reading configuration")
 
@@ -229,15 +230,15 @@ def test_orm(db_session, db_numfield_filter):
     records_list = []
     if config_error == False:
         # Query
-        query_run = "and_(TestTable.test_number" + " == " + db_numfield_filter + ")"
+        query_run = "TestTable.test_number" + " == " + db_numfield_filter
         # Record count
-        record_count = db_session.query(TestTable).filter(eval(query_run)).count()
+        record_count = int(db_session.query(TestTable).filter(eval(query_run)).count())
         # Get values
         records_list = list(db_session.query(TestTable).filter(eval(query_run)))
         print ("Record count: " + record_count)
         print ("Records querying filtering for '" + db_numfield_filter + "':")
-        for record in records_list:
-           print (str(record))
+        for record in records_list: # record is an object from the TestTable class
+           print ("Date: ", record.test_datetime, "- Number: ", record.test_number, "- Text:", record.test_text)
     else:
         print ("Error reading configuration")
 
