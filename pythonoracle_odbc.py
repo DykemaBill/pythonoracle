@@ -1,4 +1,4 @@
-# Macos Oracle driver
+# Macos Oracle driver (these are not complete, need to be tested and verified)
 #   download ODBC: http://www.unixodbc.org/download.html 
 #   install: https://blogs.oracle.com/opal/installing-the-oracle-odbc-driver-on-macos
 #       gunzip unixODBC-2.3.9.tar.gz
@@ -9,11 +9,61 @@
 #       sudo make install
 #   download Oracle 19.8 Basic Light Package for ODBC: http://www.oracle.com/technetwork/topics/intel-macsoft-096467.html
 #       Open instantclient-basiclite-macos.x64-19.8.0.0.0dbru.dmg download
-#       Copy all files to /Applications/Oracle
-#       sudo ln -s /Applications/Oracle/libclntsh.dylib.19.1 /Applications/Oracle/libclntshcore.dylib.19.1 /usr/local/lib
-#       sudo odbc_update_ini.sh /usr/local
-#       sudo chown $USER ~/.odbc.ini
-#       
+#       Copy all files to /Applications/Oracle/lib
+#       sudo ln -s /Applications/Oracle/lib/libclntsh.dylib.19.1 /Applications/Oracle/lib/libclntshcore.dylib.19.1 /usr/local/lib
+#   set environmental variables
+#       export ORACLE_HOME=/Applications/Oracle/bin/client64
+#       export LD_LIBRARY_PATH=$ORACLE_HOME/lib
+#       export TNS_ADMIN=/etc/oracle
+#   ODBC setup
+#       sudo /Applications/Oracle/bin/odbc_update_ini.sh / /Applications/Oracle Oracle [Oracle server] /etc/odbc.ini
+#       Edit the /etc/odbcinst.ini file and change the “Driver = “ line under “[Oracle]” to
+#           /Applications/Oracle/lib/libsqora.so.21.1
+
+# Red Hat Oracle driver (these have been tested)
+#   download/install ODBC:
+#       sudo dnf install unixODBC unixODBC-devel
+#   download/install latest Oracle Basic, SQL Plus and ODBC packages
+#       wget https://download.oracle.com/otn_software/linux/instantclient/oracle-instantclient-basic-linuxx64.rpm
+#       wget https://download.oracle.com/otn_software/linux/instantclient/oracle-instantclient-sqlplus-linuxx64.rpm
+#       wget https://download.oracle.com/otn_software/linux/instantclient/oracle-instantclient-odbc-linuxx64.rpm
+#       sudo dnf install oracle-instantclient-basic-linuxx64.rpm
+#       sudo dnf install libaio
+#       sudo dnf install oracle-instantclient-odbc-linuxx64.rpm
+#       sudo dnf install oracle-instantclient-sqlplus-linuxx64.rpm
+#   set environmental variables
+#       export ORACLE_HOME=/usr/lib/oracle/21/client64
+#       export LD_LIBRARY_PATH=$ORACLE_HOME/lib
+#       export TNS_ADMIN=/etc/oracle
+#   ODBC setup
+#       sudo /usr/lib/oracle/21/client64/bin/odbc_update_ini.sh / /usr/lib/oracle/21/client64 Oracle [Oracle server] /etc/odbc.ini
+#       Edit the /etc/odbcinst.ini file and change the “Driver = “ line under “[Oracle]” to
+#           /usr/lib/oracle/21/client64/lib/libsqora.so.21.1
+
+# ODBC DSN and TNS setup
+#     Edit the /etc/odbc.ini file and add the following to the DSN Oracle block
+#         User ID needed to access Oracle after “UserID = ”
+#         The Oracle TNS entry name after “ServerName = ”
+#         Add the following line at the end of the Oracle block
+#             Database = orclpdb1
+#         Add the following line at the end of the Oracle block
+#             Password = [user ID pass]
+#     Edit /etc/oracle/tnsnames.ora and add the following
+#         ORACLE_TNS =
+#           (DESCRIPTION =
+#             (ADDRESS_LIST =
+#               (ADDRESS = (PROTOCOL = TCP)(HOST = [Oracle server name])(PORT = 1521))
+#             )
+#             (CONNECT_DATA =
+#              (SID = ORCLCDB)
+#             )
+#           )
+#         EOL
+
+# Test your setup
+#     isql -v [DSN block name from odbc.ini]
+#     select value from v$parameter where name='service_names';
+
 
 from sqlalchemy import create_engine # Library to talk with Oracle, requires Python cx_Oracle module and the Oracle Instant Client to be installed on host
 from sqlalchemy import Column, DateTime, BigInteger, Text # Used to make Oracle easier to query with ORM
@@ -23,7 +73,7 @@ from sqlalchemy.orm import sessionmaker # Used to make Oracle easier to query wi
 #import cx_Oracle # Needed for connection string, but not used directly in code here unless you connect using cx_Oracle.connect rather than with the SQLAlchemy create_engine option
 import logging, logging.handlers, json, sys, os # Used for reading config and logging
 from datetime import datetime # Used for logging
-#import encryptpass as encryptpass # Used for decrypting database password read from config
+import encryptpass as encryptpass # Used for decrypting database password read from config
 
 # Configuration file name
 config_name = 'settings_odbc'
@@ -36,7 +86,7 @@ log_file = log_name + '.log'
 logger = logging.getLogger('Logger')
 
 # Decryption key for encrypted passwords
-#decryption_key = '7Ju5JdJAvW6aFEIhFTxTebvfVqkEsn_fbFjoHVbWV9w='
+decryption_key = 'RUN TO GET THIS: python encryptpass.py key'
 
 # Set default configuration variables
 support_team = "needtosetteamname"
@@ -46,6 +96,9 @@ logfilesize = [ 10000, 9 ] # 10000 is 10k, 9 is 10 total copies
 # Database configuration variables
 db_connection = "willbesetusingfourpartsbelow"
 db_conn_type = "dbtype"
+db_conn_acct = "youraccount"
+db_conn_pass = "yourpassword"
+db_conn_pass_encrypted = "yourpasswordencrypted"
 
 # Database ORM setup
 db_base = declarative_base()
@@ -68,6 +121,9 @@ def config_file_read(config_file_name):
 
             global db_connection
             global db_conn_type
+            global db_conn_acct
+            global db_conn_pass_encrypted
+            global db_conn_pass
 
             # Read log file settings
             logfilesize.clear()
@@ -82,17 +138,22 @@ def config_file_read(config_file_name):
 
             # Read DB type
             db_conn_type = cfg_data['db_conn_type']
-            # Read DB name
+            # Read DB account
+            db_conn_acct = cfg_data['db_conn_acct']
+            # Read DB encrypted password
+            db_conn_pass_encrypted = cfg_data['db_conn_pass']
+            # Decrypt DB byte to plain text password
+            db_conn_pass = encryptpass.passdecrypt(decryption_key, db_conn_pass_encrypted)
+            # Read Oracle TNS
             db_conn_service = cfg_data['db_conn_service']
             # Assemble string
-            db_connection = db_conn_type + "://" + db_conn_service
-            # Cannot get the above to work with an already defined ODBC DSN
-            # The following that uses a TNS syntax configuration works if you include credentials
-            # db_connection = 'oracle+cx_oracle://[account]:[pass]@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=[server name])(PORT=1521))(CONNECT_DATA=(SID=ORCLCDB)))'
-            # Or by referring to the TNS configuration by name provide it is available on the server
-            # db_connection = 'oracle+cx_oracle://[account]:[pass]@DTORACLE_TNS'
-            # Or read it from an environmental variable
-            # db_connection = os.environ.get("PYTHON_CONN")
+            db_connection = db_conn_type + "://" + db_conn_acct + ":" + db_conn_pass + "@" + db_conn_service
+            # Example of what the above should look like
+            #   db_connection = 'oracle+cx_oracle://[account]:[pass]@ORACLE_TNS'
+            # Example of doing the above without a TNS available to read could look like
+            #   db_connection = 'oracle+cx_oracle://[account]:[pass]@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=[server name])(PORT=1521))(CONNECT_DATA=(SID=ORCLCDB)))'
+            # Optionally you could provide the connection string from the host as a variable
+            #   db_connection = os.environ.get("PYTHON_CONN")
 
     except IOError:
         print('Problem opening ' + config_file + ', check to make sure your configuration file is not missing.')
