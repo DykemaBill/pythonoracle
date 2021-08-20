@@ -211,7 +211,7 @@ def test_database(db_inst, db_numfield, db_textfield):
         # Create relational table if it does not exist already (will throw an error if it does)
         #db_inst.execute("CREATE TABLE testtable (test_datetime TIMESTAMP NOT NULL, test_number INT, test_text VARCHAR2(50))")
         # Current date/time
-        now_is = datetime.now().strftime("%Y-%m-%d %H:%M:%S-00")
+        now_is = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
         # Write to relational database
         db_inst.execute("INSERT INTO testtable (test_datetime, test_number, test_text) VALUES (TO_DATE('%s', 'YYYY/MM/DD HH24:MI:SS'), %s, '%s')" % (str(now_is), int(db_numfield), str(db_textfield)))
         #db_inst.execute("INSERT INTO testtable (test_datetime, test_number, test_text) VALUES ('" + now_is + "', " + str(db_numfield) + ", '" + str(db_textfield) + "')")
@@ -235,7 +235,7 @@ def test_orm(db_session, db_numfield_filter):
         record_count = int(db_session.query(TestTable).filter(eval(query_run)).count())
         # Get values
         records_list = list(db_session.query(TestTable).filter(eval(query_run)))
-        print ("Record count: " + record_count)
+        print ("Record count: " + str(record_count))
         print ("Records querying filtering for '" + db_numfield_filter + "':")
         for record in records_list: # record is an object from the TestTable class
            print ("Date: ", record.test_datetime, "- Number: ", record.test_number, "- Text:", record.test_text)
