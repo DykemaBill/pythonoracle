@@ -12,6 +12,8 @@ Python examples writing to and reading from Oracle, Excel and CSVs.
     Python CLI to test read/write from/to Oracle
 - ## [pythonoracle_odbc](https://github.com/DykemaBill/pythonoracle/blob/main/pythonoracle_odbc.py) :hammer_and_wrench:
     Python CLI to test read/write from/to Oracle via ODBC
+- ## [SampleData-Excel-CSV](https://github.com/DykemaBill/pythonoracle/blob/main/SampleData-Excel-CSV.ipynb) :notebook:
+    Python Jupyter Notebook to generate some test data and write it to Excel and CSV files
 - ## [Excel-CSV](https://github.com/DykemaBill/pythonoracle/blob/main/Excel-CSV.ipynb) :notebook:
     Python Jupyter Notebook read/write from/to Excel and CSV files
 - ## [Excel-Oracle](https://github.com/DykemaBill/pythonoracle/blob/main/Excel-Oracle.ipynb) :notebook:

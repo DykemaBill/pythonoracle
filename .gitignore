@@ -10,6 +10,9 @@ mongo-volume
 postgres-volume
 oracle-volume
 dump
+*.xlsx
+*.csv
+*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
