@@ -1,10 +1,11 @@
 # pythonoracle
 
-Python example writing to and reading from Oracle, along with Excel and CSV examples
+Python examples writing to and reading from Oracle, Excel and CSVs.
 
 # Description
 
-Simple command line application to show how to write to and read from an Oracle table.
+- Simple Python applications to show how to write to and read from Oracle.
+- Jupyter Notebooks to read/write from Excel/CSV/Oracle.
 
 # Components
 - ## [pythonoracle](https://github.com/DykemaBill/pythonoracle/blob/main/pythonoracle.py) :hammer_and_wrench:
@@ -13,3 +14,5 @@ Simple command line application to show how to write to and read from an Oracle 
     Python CLI to test read/write from/to Oracle via ODBC
 - ## [Excel-CSV](https://github.com/DykemaBill/pythonoracle/blob/main/Excel-CSV.ipynb) :notebook:
     Python Jupyter Notebook read/write from/to Excel and CSV files
+- ## [Excel-Oracle](https://github.com/DykemaBill/pythonoracle/blob/main/Excel-Oracle.ipynb) :notebook:
+    Python Jupyter Notebook read from Excel and write to Oracle via ODBC connection
