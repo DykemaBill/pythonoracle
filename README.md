@@ -16,3 +16,5 @@ Python examples writing to and reading from Oracle, Excel and CSVs.
     Python Jupyter Notebook read/write from/to Excel and CSV files
 - ## [Excel-Oracle](https://github.com/DykemaBill/pythonoracle/blob/main/Excel-Oracle.ipynb) :notebook:
     Python Jupyter Notebook read from Excel and write to Oracle via ODBC connection
+- ## [Oracle-Excel](https://github.com/DykemaBill/pythonoracle/blob/main/Oracle-Excel.ipynb) :notebook:
+    Python Jupyter Notebook read from Oracle via ODBC connection and write to Excel, CSV and text files
