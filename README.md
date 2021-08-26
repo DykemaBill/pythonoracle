@@ -26,3 +26,5 @@ Python examples writing to and reading from Oracle, Excel and CSVs.
     Python Jupyter Notebook Oracle table via ODBC update and delete records in-place
 - ## [API-Excel](https://github.com/DykemaBill/pythonoracle/blob/main/API-Excel.ipynb) :notebook:
     Python Jupyter Notebook pull from RESTful API in JSON format and write to Excel and CSV files
+- ## [API-Oracle](https://github.com/DykemaBill/pythonoracle/blob/main/API-Oracle.ipynb) :notebook:
+    Python Jupyter Notebook pull from RESTful API in JSON format and write to Oracle
