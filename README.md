@@ -30,3 +30,5 @@ Python examples writing to and reading from Oracle, Excel and CSVs.
     Python Jupyter Notebook pull from RESTful API in JSON format and write to Oracle via ODBC connection
 - ## [Excel-Email](https://github.com/DykemaBill/pythonoracle/blob/main/Excel-Email.ipynb) :notebook:
     Python Jupyter Notebook to email Excel file as an attachment
+- ## [Excel-FTP](https://github.com/DykemaBill/pythonoracle/blob/main/Excel-FTP.ipynb) :notebook:
+    Python Jupyter Notebook to ftp Excel file
